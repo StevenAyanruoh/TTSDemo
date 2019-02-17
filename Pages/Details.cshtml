@@ -1,0 +1,85 @@
+@page "{title?}"
+@model DetailsModel
+@functions {
+    List<FemaleDatasetRecord> set = new List<FemaleDatasetRecord>();
+        
+        public List<FemaleDatasetRecord> getDataSetList(string name)
+        {
+            buildSet(name);
+            return set;
+
+        }
+
+        public string getPageTitle()
+        {
+            return replaceSpaces(@Model.Title);
+        }
+
+        private void buildSet(string name)
+        {
+            List<Amazon.S3.Model.S3Object> res = DownloadCSVFromS3.getBucketList();
+            foreach (Amazon.S3.Model.S3Object entry in res)
+            {
+                if(entry.Key.Equals(getPageTitle()))
+                {
+                    string resFilePath = "res.json";
+                    DownloadCSVFromS3.DownloadCSV(getPageTitle(), resFilePath);
+                    set = ParseCSV.parseFemaleDatasetJSON(resFilePath);
+                    
+
+                }
+            }  
+
+        }
+
+        private string replaceSpaces(string target)
+        {
+            return target.Replace("_", " ");
+        }
+
+
+}
+
+<h1>@getPageTitle()</h1>
+
+<h3>Record Count: @getDataSetList(getPageTitle()).Count</h3>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Fips
+            </th>
+            <th>
+                Area Name
+            </th>
+            <th>
+                State Abbreviation
+            </th>
+            <th>
+                Percent of Women-Owned Firms
+            </th>
+
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in getDataSetList(getPageTitle())) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.fips)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.area_name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.state_abbreviation)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SBO015207)
+            </td>            
+        </tr>
+}
+    </tbody>
+</table>

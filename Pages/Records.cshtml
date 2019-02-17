@@ -1,0 +1,62 @@
+﻿@page
+@functions {
+    List<DataSet> set = new List<DataSet>();
+        
+        public List<DataSet> getDataSetList()
+        {
+            buildSet();
+            return set;
+
+        }
+
+        private string replaceSpaces(string target)
+        {
+            return target.Replace(" ", "_");
+        }
+
+        private void buildSet()
+        {
+            
+            List<Amazon.S3.Model.S3Object> res = DownloadCSVFromS3.getBucketList();
+            foreach (Amazon.S3.Model.S3Object entry in res)
+            {
+                
+                var dataSet = new DataSet();
+                dataSet.setName = entry.Key;
+                dataSet.urlParam = $"/Details/{replaceSpaces(dataSet.setName)}";
+                Console.WriteLine(dataSet.urlParam);
+                set.Add(dataSet);
+            }        
+            
+        }
+}
+
+<h1>County Record Datasets</h1>
+
+<p>Select a data set</p>
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                Dataset Name
+            </th>
+
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in getDataSetList()) {
+    
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.setName)
+            </td>
+             <td>
+                <a href="@item.urlParam">Details</a> |   
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
